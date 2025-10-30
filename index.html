@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Přihlášení k Wi-Fi</title>
+  <style>
+    body { font-family: sans-serif; text-align:center; padding:50px; }
+    input { display:block; margin:10px auto; padding:10px; width:80%; max-width:300px; }
+    button { padding:10px 20px; }
+  </style>
+</head>
+<body>
+  <h1>Vítejte na Wi-Fi</h1>
+  <form id="loginForm">
+    <input type="text" id="name" placeholder="Jméno" required>
+    <input type="email" id="email" placeholder="E-mail" required>
+    <button type="button" id="sendCode">Odeslat kód</button>
+  </form>
+
+  <form id="verifyForm" style="display:none;">
+    <input type="text" id="otp" placeholder="Zadejte kód">
+    <button type="button" id="verifyBtn">Potvrdit</button>
+  </form>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const mac = params.get('mac');
+    document.getElementById("sendCode").onclick = async () => {
+      const name = document.getElementById("name").value;
+      const email = document.getElementById("email").value;
+      const res = await fetch("/api/send-code", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, mac })
+      });
+      if (res.ok) {
+        alert("Kód odeslán na e-mail");
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("verifyForm").style.display = "block";
+      } else alert("Chyba při odeslání");
+    };
+
+    document.getElementById("verifyBtn").onclick = async () => {
+      const otp = document.getElementById("otp").value;
+      const res = await fetch("/api/verify-code", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mac, otp })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        alert("Ověřeno! Můžete se připojit.");
+        window.location.href = "http://www.google.com";
+      } else alert("Neplatný kód");
+    };
+  </script>
+</body>
+</html>
